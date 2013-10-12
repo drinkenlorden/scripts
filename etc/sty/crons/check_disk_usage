@@ -1,0 +1,55 @@
+#!/bin/bash
+
+
+# added cycle to output all overlimit partitions.
+# notification mail is sent to root@ssabchew.info
+
+
+#  a quick script to output local filesystem usage > $LIMIT, for both
+#  servers and workstations
+
+# if the hostname seems to be a server ( hostname = ^srv-.* ), don't ignore
+#  /home; otherwise, do like if it's a workstation
+
+# if no argument is given, we use the hardcoded $LIMIT
+
+# bugs/limitations:
+#  - if df output format changes, this script will fail, since we use
+#    hardcoded field position
+#  - even with -l, df keeps on reporting smbfs mounts on RH7.3; hardcode it
+
+LIMIT=95 # %
+
+EMAIL_TO=root@ssabchew.info
+
+DISK_USAGE=
+
+#----------------------------------------------------#
+
+[ "$#" -eq 1 ] && LIMIT="$1"
+
+if echo $LIMIT | grep -vq '^[0-9]*$'; then
+   echo "$(basename "$0"): Wrong percentage: $LIMIT"  >&2
+   exit 1
+fi
+
+IS_SERVER=
+hostname | grep -q '^srv-' && IS_SERVER=yes
+
+
+DU=`df -x -Pl -x iso9660 -x vfat -x smbfs | awk -v limit="$LIMIT" -v is_server="$IS_SERVER" '/[0-9]*%/ {
+    if ( (is_server!="" && $6 != "/home") || (is_server=="") ) {
+       disk_usage=gensub("%","","h",$5)+0;
+       if (disk_usage > limit) {
+          printf("%s,%d%\n",$6,disk_usage)
+       }
+    }
+}'`
+
+for PARTITION in $DU; do
+    DISK_USAGE="$DISK_USAGE\n${PARTITION%,*} \t used space exceed ${PARTITION#*,}"
+done
+
+if [ "$DU" != "" ]; then
+      echo -e "Disk usage on partition: \n $DISK_USAGE" | mail -s "[Disk usage][host: $HOSTNAME]" $EMAIL_TO
+fi

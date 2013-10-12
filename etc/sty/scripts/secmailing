@@ -1,0 +1,23 @@
+#!/bin/bash
+###
+#
+# Prupose: take last file from dir and send it to someone
+#
+###
+
+TARGET_DIR="$(cat /etc/motion/motion.conf | grep '^target_dir  *' | sed 's/^target_dir  *\(.*\)/\1/')"
+echo "[[[$TARGET_DIR]]]"
+echo "echo "[[[$TARGET_DIR]]]""
+#ATUCHMENT=$(find /var/motion/test |grep ".jpg"|sort|sed -n '$p')
+BODY="
+\n\tPlease don't reply to this e-mail.
+\n
+\n
+Notice
+\n
+\nThis communication is from [[Some Company]]. It contains information which is confidential and
+may also be privileged. It is for the exclusive use of the intended recipient(s). Any unauthorized
+distribution, copying or use of this communication or the information contained within is explicitly
+prohibited. If you have received this communication in error, please delete the email and any copies of it."
+#echo -e $BODY|mail -r securitycam@domain.com -s "Scurity camera" -a $ATUCHMENT whoever@domain.com
+#END

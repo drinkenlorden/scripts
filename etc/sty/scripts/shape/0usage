@@ -1,0 +1,4 @@
+perl tc-graph.pl > mygraph.dot
+cat mygraph.dot|dot -Tpng > mygraph.png
+cat mygraph.dot|dot -Tps > mygraph.ps
+convert mygraph.ps mygraph.jpeg

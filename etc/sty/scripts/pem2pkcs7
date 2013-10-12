@@ -1,0 +1,3 @@
+#!/bin/bash
+
+echo openssl crl2pkcs7 -nocrl -outform DER -certfile cert.pem -certfile cacert.pem -out mycert.p7b

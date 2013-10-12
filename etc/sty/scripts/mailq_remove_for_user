@@ -1,0 +1,16 @@
+#!/bin/bash
+
+help(){
+
+    echo -ne "\n Usage `basename $0` user@example.com\n"
+    echo -ne "\n `basename $0` will delete all messages for user@example.com\n in the postfix mailq\n"
+#    exit 0
+}
+
+
+[ -z $1 ] && help
+
+
+
+mailq | tail +2 | grep -v '^ *(' | awk  'BEGIN { RS  = "" }  # $7=sender, $8=recipient1, $9=recipient2 \
+                  { if ($8 == "$1" && $9 == "")  print $1 }  ' | tr -d '*!' | postsuper -d -
