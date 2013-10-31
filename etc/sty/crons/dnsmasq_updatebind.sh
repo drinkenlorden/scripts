@@ -12,7 +12,8 @@ cfg_marker_start="; ; ; mark BEGIN ; ; ;"
 cfg_marker_end="; ; ; BSTK END ; ; ;"
 # BIND novaclient zone
 bindnova=/var/named/chroot/var/named/db.novalocal
-
+nova=`basename $novaclient`
+bstk=/var/lib/bstk
 
 clear_markers() {
     f_path="$1"
@@ -22,21 +23,32 @@ clear_markers() {
     fi
 }
 
+check_and_update(){
+
+if [ -f $novaclient -a  $bstk/$nova.bkp ] ;then
+    if ! diff $novaclient $bstk/$nova.bkp  &>/dev/null ; then
+        clear_markers $bindnova
+        cat >> $bindnova << EOF
+$cfg_marker_start
+$data
+$cfg_marker_end
+EOF
+        /sbin/service named reload
+    fi
+fi
+
+}
+
 if [ -f $novaclient ] ;then
-    data=`cat $novaclient | awk -F"," '{print $2"           IN   1H  A       "$3}'|sed -e 's/.novalocal//'`
+    data=`cat $novaclient | awk -F"," '{print $2"           IN   1H  A       "$3}'|sed -e 's/.novalocal//'|sed -e 's/.cloudrunner//'`
     #echo $data
 else
     echo "File $novaclient not found"
 fi
 
 if [ -f $bindnova ] ;then
-    clear_markers $bindnova
-    cat >> $bindnova << EOF
-    $cfg_marker_start
-    $data
-    $cfg_marker_end
-EOF
+    cp $novaclient $bstk/$nova.bkp
+    check_and_update
 else
     echo "File $bindnova not found"
 fi
-
